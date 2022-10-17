@@ -1,27 +1,27 @@
-local function Teleport()
-    local Player = game.Players.LocalPlayer    
-    local Http = game:GetService("HttpService")
-    local TPS = game:GetService("TeleportService")
-    local Api = "https://games.roblox.com/v1/games/"
-
-    local _place,_id = game.PlaceId, game.JobId
-    local _servers = Api.._place.."/servers/Public?sortOrder=Desc&limit=100"
-    function ListServers(cursor)
-    local Raw = game:HttpGet(_servers .. ((cursor and "&cursor="..cursor) or ""))
-    return Http:JSONDecode(Raw)
+local placeId = game.PlaceId;
+local foundAnything = "";
+local function brr()
+    local site;
+    if foundAnything == "" then
+        site = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"))
+    else
+        site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. placeId .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
     end
-
-    local Next; repeat
-    local Servers = ListServers(Next)
-    for i,v in next, Servers.data do
-        if v.playing < 5 and v.id ~= _id then
-            local s,r = pcall(TPS.TeleportToPlaceInstance,TPS,_place,v.id,Player)
-            if s then break end
+    local id = "";
+    if site.nextPageCursor and site.nextPageCursor ~= "null" and site.nextPageCursor ~= nil then
+        foundAnything = site.nextPageCursor;
+    end
+    local num = 0;
+    for i,v in pairs(site.data) do
+        id = tostring(v.id);
+        print(id);
+        if tonumber(v.playing) <= 3 then
+            pcall(function()
+                game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, id, game:service"Players".LocalPlayer); 
+            end)
+            wait(4);
         end
     end
-    
-    Next = Servers.nextPageCursor
-    until not Next
 end
 
-Teleport()
+brr()
